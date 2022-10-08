@@ -1,5 +1,9 @@
 name: 'Apply AWS Cloudformation'
 description: 'Apply AWS Cloudformation'
+branding:
+  icon: arrow-right
+  color: orange
+
 inputs:
   access-key-id:
     description: 'AWS_ACCESS_KEY_ID'
