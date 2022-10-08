@@ -48,6 +48,6 @@ So, to use the output `result`, you will need to do a JSON conversion in your st
 
 - name: Echo values from previous step
   run: |
-      echo ${{ toJSON(fromJSON(steps.apply_cloudformation.outputs.result)) }}
-      echo ${{ fromJSON(steps.apply_cloudformation.outputs.result).SomeKey }}
+      echo '${{ toJSON(fromJSON(steps.apply_cloudformation.outputs.result)) }}'
+      echo '${{ fromJSON(steps.apply_cloudformation.outputs.result).SomeKey }}'
 ```
