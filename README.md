@@ -1,4 +1,4 @@
-# Set text output v1
+# Apply AWS cloudformation v1
 
 A simple composite actions to apply cloudformation.
 
