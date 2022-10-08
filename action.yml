@@ -1,0 +1,93 @@
+name: 'Apply AWS Cloudformation'
+description: 'Apply AWS Cloudformation'
+inputs:
+  access-key-id:
+    description: 'AWS_ACCESS_KEY_ID'
+    required: true
+  secret-access-key:
+    description: 'AWS_SECRET_ACCESS_KEY'
+    required: true
+  default-region:
+    description: 'AWS_DEFAULT_REGION'
+    required: true
+    default: 'us-east-1'
+  template-files-source-path:
+    description: 'The path to find template files that will be copied to staging bucket'
+    required: true
+  template-files-destination-path:
+    description: 'The path on the staging bucket where the template files will be copied to'
+    required: true
+  template-index-file:
+    description: 'The file name for the cloudformation file'
+    required: false
+    default: 'index.yml'
+  staging-bucket-name:
+    description: 'The S3 bucket where the template files will be staged.'
+    required: true
+  stack-name:
+    description: 'The name of the Cloudformation stack.'
+    required: true
+  params:
+    description: 'Parameters for Cloudformation in format of KEY1=VALUE1 KEY2=VALUE2 ...'
+    required: false
+
+outputs:
+  result:
+    description: "Output of the command"
+    value: ${{ steps.set-result.outputs.result }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: 'Copy template files to staging bucket'
+      id: copy_template
+      uses: enchanting/aws-cli-action@v1
+      with:
+        access-key-id: ${{ inputs.access-key-id }}
+        secret-access-key: ${{ inputs.secret-access-key }}
+        default-region: ${{ inputs.default-region }}
+        sub-command: s3
+          sync 
+          ${{ inputs.template-files-source-path }} 
+          s3://${{ inputs.staging-bucket-name }}/${{ inputs.template-files-destination-path }}
+
+    - name: 'Apply Cloudformation'
+      uses: enchanting/aws-cli-action@v1
+      with:
+        access-key-id: ${{ inputs.access-key-id }}
+        secret-access-key: ${{ inputs.secret-access-key }}
+        default-region: ${{ inputs.default-region }}
+        sub-command: cloudformation 
+          deploy 
+            --template-file ${{ inputs.template-files-source-path }}/${{ inputs.template-index-file }} 
+            --stack-name ${{ inputs.stack-name }} 
+            --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM 
+            --parameter-overrides 
+              ${{ inputs.params }}
+
+
+    - name: 'Describe Cloudformation stack'
+      id: describe_cf
+      uses: enchanting/aws-cli-action@v1
+      with:
+        access-key-id: ${{ inputs.access-key-id }}
+        secret-access-key: ${{ inputs.secret-access-key }}
+        default-region: ${{ inputs.default-region }}
+        sub-command: cloudformation 
+          describe-stacks 
+          --stack-name ${{ inputs.stack-name }} 
+
+    - uses: actions/github-script@v6
+      id: set-result
+      env:
+        DESCRIBE_CF: ${{ steps.describe_cf.outputs.result }}
+      with:
+        script: |
+          const text = process.env.DESCRIBE_CF;
+          const data = JSON.parse(text);
+
+          let output = data.Stacks[0].Outputs.reduce(
+            (obj, item) => Object.assign(obj, { [item.OutputKey]: item.OutputValue }),
+            {}
+          );
+          return output;
