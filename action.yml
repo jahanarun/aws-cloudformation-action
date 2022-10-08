@@ -45,7 +45,7 @@ runs:
   steps:
     - name: 'Copy template files to staging bucket'
       id: copy_template
-      uses: enchanting/aws-cli-action@v1
+      uses: jahanarun/aws-cli-action@v1
       with:
         access-key-id: ${{ inputs.access-key-id }}
         secret-access-key: ${{ inputs.secret-access-key }}
@@ -56,7 +56,7 @@ runs:
           s3://${{ inputs.staging-bucket-name }}/${{ inputs.template-files-destination-path }}
 
     - name: 'Apply Cloudformation'
-      uses: enchanting/aws-cli-action@v1
+      uses: jahanarun/aws-cli-action@v1
       with:
         access-key-id: ${{ inputs.access-key-id }}
         secret-access-key: ${{ inputs.secret-access-key }}
@@ -72,7 +72,7 @@ runs:
 
     - name: 'Describe Cloudformation stack'
       id: describe_cf
-      uses: enchanting/aws-cli-action@v1
+      uses: jahanarun/aws-cli-action@v1
       with:
         access-key-id: ${{ inputs.access-key-id }}
         secret-access-key: ${{ inputs.secret-access-key }}
